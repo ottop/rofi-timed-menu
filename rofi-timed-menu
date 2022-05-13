@@ -1,0 +1,47 @@
+#!/bin/bash
+
+COMS="poweroff reboot" #List of commands to include.
+CD=10 #Number to count down from.
+WIDTH=4 #How wide the box is. Adjust manually to fit your choice of font and countdown number.
+LOCATION=5 #Where the box is located. Refer to rofi's manpage for what each number means.
+FONT="mono 40" #Set your font and font size.
+CANCELKEY="Escape" #Key to use for escaping the program during the countdown.
+ONTIME=0.9 #How long the countdown number stays on the screen after appearing.
+OFFTIME=0.1 #How long to wait after the countdown number disappears before the next number appears.
+INC=1 #Increment by which the countdown number goes down each time
+
+FNAME=`basename $0` #Returns this script's name. Used for killing the process in case of cancelling. 
+
+liststuff() {
+	for x in $COMS
+	do
+		echo $x
+	done
+}
+
+OPTS=$((liststuff) | rofi -dmenu -p "Select option")
+if ! [[ -z "${OPTS}" ]]; then
+      
+	for((i=$CD;i>0;i=i-$INC))
+	do
+		c=$i
+        if [ ${#i} -lt ${#CD} ];
+		then
+			for((j=${#CD}-${#i};j>0;j--))
+			do
+				c="0${c}"
+			done
+		fi 
+		rofi -e $c -no-click-to-exit -width $WIDTH -location $LOCATION -kb-row-tab "" -kb-accept-entry "" -kb-accept-alt "" -kb-cancel "${CANCELKEY}" -font "${FONT}" & sleep $ONTIME;killall rofi
+        if [ $? == 1 ];
+		then
+			killall $FNAME
+		fi
+		sleep $OFFTIME
+	
+	done
+	${OPTS} 
+else
+	killall $FNAME
+	killall rofi
+fi
